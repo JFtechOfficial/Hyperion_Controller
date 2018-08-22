@@ -2,9 +2,12 @@ import sys
 import xbmcgui
 import xbmcplugin
 import xbmcaddon
+import xbmcvfs
 import urllib
 import urlparse
+import json
 import hyperion_client
+from contextlib import closing
 
 base_url = sys.argv[0]
 addon_handle = int(sys.argv[1])
@@ -40,7 +43,10 @@ def cmd_display_current_location(*args):
 
 mode = args.get('mode', None)
 
-colornames = {'red':(255,0,0), 'green':(0,255,0), 'blue':(0,0,255),'yellow':(255,255,0),'orange':(255,100,0),'purple':(255,0,255),'magenta':(255,50,100),'cyan':(10,100,250),'white':(255,255,255)}
+#colornames = {'red':(255,0,0), 'green':(0,255,0), 'blue':(0,0,255),'yellow':(255,255,0),'orange':(255,100,0),'purple':(255,0,255),'magenta':(255,50,100),'cyan':(10,100,250),'white':(255,255,255)}
+#color_path = 'C:\Users\GianlucaSPS\AppData\Roaming\Kodi\\addons\plugin.program.hyperion-controller\colors.json'
+color_path = xbmc.translatePath('special://home/addons/plugin.program.hyperion-controller/colors.json')
+
 divider = '-'
 ip = str(ADDON.getSetting('ip'))
 port = ADDON.getSetting('port')
@@ -109,10 +115,14 @@ elif mode[0] == 'folder':
             h.close_connection()
 
     elif foldersplit[0] == 'Color':
+        with open(color_path) as f:
+        #with closing(xbmcvfs.File('colors.json')) as f:
+            colornames = json.load(f)
+        
         if foldername == 'Color':            
             for c in colornames:
                 url = build_url({'mode': 'folder', 'foldername': foldername + divider + c})
-                hexColor = '%02x%02x%02x' % colornames[c]
+                hexColor = '%02x%02x%02x' % tuple(colornames[c])
                 img = 'https://dummyimage.com/100x100/' + hexColor + '/' + hexColor + '.jpg'
                 li = xbmcgui.ListItem(c, iconImage=img)
                 xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=False)
