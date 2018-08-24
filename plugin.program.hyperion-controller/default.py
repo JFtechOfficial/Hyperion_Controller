@@ -7,7 +7,9 @@ import urllib
 import urlparse
 import json
 import hyperion_client
-from contextlib import closing
+import pyxbmct
+import os
+import socket
 
 base_url = sys.argv[0]
 addon_handle = int(sys.argv[1])
@@ -16,9 +18,155 @@ xbmcplugin.setContent(addon_handle, 'files')
 
 ADDON = xbmcaddon.Addon()
 ADDONNAME = ADDON.getAddonInfo('id')
+_addon_path = ADDON.getAddonInfo('path')
+
+mode = args.get('mode', None)
+
+color_path = xbmc.translatePath('special://home/addons/plugin.program.hyperion-controller/colors.json')
+divider = '-'
+ip = str(ADDON.getSetting('ip'))
+port = ADDON.getSetting('port')
+apriority = ADDON.getSetting('priority') 
+h=hyperion_client.hyperion_client(ip, port)
+
+##################################
+    
+class MyAddon(pyxbmct.AddonDialogWindow):
+
+    def __init__(self, title=''):
+        super(MyAddon, self).__init__(title)
+        self.setGeometry(400, 240, 4, 4)
+        self.set_sliderR()
+        self.set_sliderG()
+        self.set_sliderB()
+        self.okButton = pyxbmct.Button('Ok')
+        self.placeControl(self.okButton, 3, 2)
+        self.connect(self.okButton, self.launch)
+        self.closeButton = pyxbmct.Button('Close')
+        self.placeControl(self.closeButton, 3, 1)
+        self.connect(self.closeButton, self.close)
+        self.set_navigation()
+        # Connect a key action (Backspace) to close the window.
+        self.connect(pyxbmct.ACTION_NAV_BACK, self.close)
+
+    def set_sliderR(self):
+        # Slider value label
+        SLIDER_INIT_VALUE = 0
+        self.slider_valueR = pyxbmct.Label(str(SLIDER_INIT_VALUE), alignment=pyxbmct.ALIGN_CENTER)
+        self.placeControl(self.slider_valueR, 0, 1)
+        #
+        slider_caption = pyxbmct.Label('RED', alignment=pyxbmct.ALIGN_CENTER)
+        self.placeControl(slider_caption, 0, 0)
+        # Slider
+        self.sliderR = pyxbmct.Slider()
+        self.placeControl(self.sliderR, 0, 2, pad_y=10, columnspan=2)
+        #self.slider.setPercent(SLIDER_INIT_VALUE)
+        self.sliderR.setInt(SLIDER_INIT_VALUE, -10, 5, 255)
+        # Connect key and mouse events for slider update feedback.
+        self.connectEventList([pyxbmct.ACTION_MOVE_LEFT,
+                               pyxbmct.ACTION_MOVE_RIGHT,
+                               pyxbmct.ACTION_MOUSE_DRAG,
+                               pyxbmct.ACTION_MOUSE_LEFT_CLICK],
+                              self.slider_update)
+
+    def set_sliderG(self):
+        # Slider value label
+        SLIDER_INIT_VALUE = 0
+        self.slider_valueG = pyxbmct.Label(str(SLIDER_INIT_VALUE), alignment=pyxbmct.ALIGN_CENTER)
+        self.placeControl(self.slider_valueG, 1, 1)
+        #
+        slider_caption = pyxbmct.Label('GREEN', alignment=pyxbmct.ALIGN_CENTER)
+        self.placeControl(slider_caption, 1, 0)
+        # Slider
+        self.sliderG = pyxbmct.Slider()
+        self.placeControl(self.sliderG, 1, 2, pad_y=10, columnspan=2)
+        #self.slider.setPercent(SLIDER_INIT_VALUE)
+        self.sliderG.setInt(SLIDER_INIT_VALUE, -10, 5, 255)
+        # Connect key and mouse events for slider update feedback.
+##        self.connectEventList([pyxbmct.ACTION_MOVE_LEFT,
+##                               pyxbmct.ACTION_MOVE_RIGHT,
+##                               pyxbmct.ACTION_MOUSE_DRAG,
+##                               pyxbmct.ACTION_MOUSE_LEFT_CLICK],
+##                              self.slider_update)
+
+
+    def set_sliderB(self):
+        # Slider value label
+        SLIDER_INIT_VALUE = 0
+        self.slider_valueB = pyxbmct.Label(str(SLIDER_INIT_VALUE), alignment=pyxbmct.ALIGN_CENTER)
+        self.placeControl(self.slider_valueB, 2, 1)
+        #
+        slider_caption = pyxbmct.Label('BLUE', alignment=pyxbmct.ALIGN_CENTER)
+        self.placeControl(slider_caption, 2, 0)
+        # Slider
+        self.sliderB = pyxbmct.Slider()
+        self.placeControl(self.sliderB, 2, 2, pad_y=10, columnspan=2)
+        #self.slider.setPercent(SLIDER_INIT_VALUE)
+        self.sliderB.setInt(SLIDER_INIT_VALUE, -10, 5, 255)
+    
+
+    def launch(self):
+        red = self.sliderR.getInt()
+        green = self.sliderG.getInt()
+        blue = self.sliderB.getInt()
+        try:
+            global h
+            h.set_RGBcolor(red=red, green=green, blue=blue, priority=apriority)
+            line = 'launhing ' + str(red) + ', ' + str(green) + ', ' + str(blue) + ' on Hyperion ' + ip
+            xbmcgui.Dialog().notification('Color', line)
+            h.close_connection()
+        except socket.error:
+            xbmcgui.Dialog().notification('Error', 'cannot connect to server', xbmcgui.NOTIFICATION_ERROR)
+        self.close()
+
+
+    def set_navigation(self):
+        # Set navigation between controls
+        self.sliderG.controlUp(self.sliderR)
+        self.sliderR.controlDown(self.sliderG)
+        self.sliderB.controlUp(self.sliderG)
+        self.sliderG.controlDown(self.sliderB)
+        self.okButton.controlDown(self.sliderB)
+        self.sliderB.controlDown(self.okButton)
+        self.okButton.controlUp(self.sliderB)
+        self.okButton.controlLeft(self.closeButton)
+        self.closeButton.controlRight(self.okButton)
+        # Set initial focus
+        self.setFocus(self.sliderR)
+
+    def slider_update(self):
+        # Update slider value label when the slider nib moves
+        try:
+            if self.getFocus() == self.sliderR:
+                n = self.sliderR.getInt()
+                if n < 0:
+                    n = 0
+                self.slider_valueR.setLabel(str(n))#'{:.1F}'.format(self.slider.getInt()))
+            elif self.getFocus() == self.sliderG:
+                n = self.sliderG.getInt()
+                if n < 0:
+                    n = 0
+                self.slider_valueG.setLabel(str(n))
+            elif self.getFocus() == self.sliderB:
+                n = self.sliderB.getInt()
+                if n < 0:
+                    n = 0
+                self.slider_valueB.setLabel(str(n))
+        except (RuntimeError, SystemError):
+            pass
+
+
+    def setAnimation(self, control):
+        # Set fade animation for all add-on window controls
+        control.setAnimations([('WindowOpen', 'effect=fade start=0 end=100 time=200',),
+                                ('WindowClose', 'effect=fade start=100 end=0 time=200',)])
+
+##################################
+
 
 def build_url(query):
     return base_url + '?' + urllib.urlencode(query)
+
 
 def launching(foldersplit):
     if len(foldersplit) == 2:
@@ -31,31 +179,12 @@ def launching(foldersplit):
     return name
 
 
-def cmd_display_current_location(*args):
-    window = xbmcgui.WindowXMLDialog('custom-sliders.xml',xbmcaddon.Addon().getAddonInfo('path').decode('utf-8'), 'default', '720p')
-    win =xbmcgui.Window(10001)
-    win.setProperty( 'VPN.ExitNode' ,  'Brisbane, Australia')
-    #Property can be accessed in the XML using:
-    #<label fallback="416">$INFO[Window(10001).Property(VPN.ExitNode)]</label>
-    window.doModal()
-    del window
-
-
-mode = args.get('mode', None)
-
-#colornames = {'red':(255,0,0), 'green':(0,255,0), 'blue':(0,0,255),'yellow':(255,255,0),'orange':(255,100,0),'purple':(255,0,255),'magenta':(255,50,100),'cyan':(10,100,250),'white':(255,255,255)}
-#color_path = 'C:\Users\GianlucaSPS\AppData\Roaming\Kodi\\addons\plugin.program.hyperion-controller\colors.json'
-color_path = xbmc.translatePath('special://home/addons/plugin.program.hyperion-controller/colors.json')
-
-divider = '-'
-ip = str(ADDON.getSetting('ip'))
-port = ADDON.getSetting('port')
-apriority = ADDON.getSetting('priority') 
-h=hyperion_client.hyperion_client(ip, port)
-
 if mode is None:
     url = build_url({'mode': 'folder', 'foldername': 'Clear All'})
-    li = xbmcgui.ListItem('Clear all effects/color', iconImage='http://www.weareclear.co.uk/wp-content/uploads/2017/12/logo.png')
+    li = xbmcgui.ListItem('Clear all effects/color')
+    image='http://www.weareclear.co.uk/wp-content/uploads/2017/12/logo.png'
+    li.setArt({'thumb': image,
+                'icon': image})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=False)
     
     url = build_url({'mode': 'folder', 'foldername': 'Color'})
@@ -66,7 +195,7 @@ if mode is None:
               'fanart': image})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url,
                                 listitem=li, isFolder=True)
-    
+
     url = build_url({'mode': 'folder', 'foldername': 'Effects'})
     li = xbmcgui.ListItem('Effects')
     image='https://png.icons8.com/color/1600/color-wheel-2.png'
@@ -77,46 +206,69 @@ if mode is None:
                                 listitem=li, isFolder=True)
     sliders = 'RGB Sliders'
     url = build_url({'mode': 'folder', 'foldername': sliders})
-    li = xbmcgui.ListItem(sliders, iconImage='https://sites.google.com/site/makecolorsimages/sliders-RGB_512x512.png')
+    li = xbmcgui.ListItem(sliders)
+    image='https://sites.google.com/site/makecolorsimages/sliders-RGB_512x512.png'
+    li.setArt({'thumb': image,
+                'icon': image})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
     
     Settings = 'Settings'
     url = build_url({'mode': 'folder', 'foldername': Settings})
-    li = xbmcgui.ListItem(Settings, iconImage='https://cdn4.iconfinder.com/data/icons/meBaze-Freebies/512/setting.png')
+    li = xbmcgui.ListItem(Settings)
+    image='https://cdn4.iconfinder.com/data/icons/meBaze-Freebies/512/setting.png'
+    li.setArt({'thumb': image,
+                'icon': image})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=False)
 
+    Donate = 'Support me here: https://ko-fi.com/Y8Y0FW3V '
+    url = build_url({'mode': 'folder', 'foldername': Donate})
+    li = xbmcgui.ListItem(Donate)
+    image='https://chart.googleapis.com/chart?cht=qr&chl=https%3A%2F%2Fko-fi.com%2FY8Y0FW3V&chs=180x180&choe=UTF-8&chld=L|2'
+    li.setArt({'thumb': image,
+                'icon': image})
+    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=False)
     
-    xbmcplugin.endOfDirectory(addon_handle)
+    #xbmcplugin.endOfDirectory(addon_handle)
 
 elif mode[0] == 'folder':
     foldername = args['foldername'][0]
 
     if foldername == 'Clear All':
-        h.clear_all()
-        xbmcgui.Dialog().notification(foldername, 'clearing...')
-        h.close_connection()
+        try:
+            h.clear_all()
+            line = 'clearing...'
+            xbmcgui.Dialog().notification(foldername, line)
+            h.close_connection()
+        except socket.error:
+            xbmcgui.Dialog().notification('Error', 'cannot connect to server', xbmcgui.NOTIFICATION_ERROR)
+
     
     foldersplit = foldername.split(divider)
     if foldersplit[0] == 'Effects':
         if foldername == 'Effects':
-            effectnames =  h.effects_names()#['Snake', 'Rainbow swirl fast']
-            for e in effectnames:
-                #url = 'http://www.vidsplay.com/wp-content/uploads/2017/04/alligator.mp4'
-                url = build_url({'mode': 'folder', 'foldername': foldername + divider + e })
-                li = xbmcgui.ListItem(e)
-                xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
+            try:
+                effectnames =  h.effects_names()#['Snake', 'Rainbow swirl fast']
+                for e in effectnames:
+                    #url = 'http://www.vidsplay.com/wp-content/uploads/2017/04/alligator.mp4'
+                    url = build_url({'mode': 'folder', 'foldername': foldername + divider + e })
+                    li = xbmcgui.ListItem(e)
+                    xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
+            except socket.error:
+                xbmcgui.Dialog().notification('Error', 'cannot connect to server', xbmcgui.NOTIFICATION_ERROR)
+
 
         elif len(foldersplit) > 1:
             nome = launching(foldersplit)
-            h.set_effect(effectName=nome, priority=apriority)
-            line1 = foldersplit[0]
-            line2 = "launching " + nome + " on Hyperion " + ip
-            xbmcgui.Dialog().notification(line1, line2)
-            h.close_connection()
+            try:
+                h.set_effect(effectName=nome, priority=apriority)
+                line = "launching " + nome + " on Hyperion " + ip
+                xbmcgui.Dialog().notification(foldersplit[0], line)
+                h.close_connection()
+            except socket.timeout:
+                xbmcgui.Dialog().notification('Error', 'cannot connect to server', xbmcgui.NOTIFICATION_ERROR)
 
     elif foldersplit[0] == 'Color':
         with open(color_path) as f:
-        #with closing(xbmcvfs.File('colors.json')) as f:
             colornames = json.load(f)
         
         if foldername == 'Color':            
@@ -124,31 +276,32 @@ elif mode[0] == 'folder':
                 url = build_url({'mode': 'folder', 'foldername': foldername + divider + c})
                 hexColor = '%02x%02x%02x' % tuple(colornames[c])
                 img = 'https://dummyimage.com/100x100/' + hexColor + '/' + hexColor + '.jpg'
-                li = xbmcgui.ListItem(c, iconImage=img)
+                li = xbmcgui.ListItem(c)
+                li.setArt({'thumb': img,
+                            'icon': img,
+                            'fanart': img})       
                 xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=False)
+            #xbmcplugin.endOfDirectory(addon_handle)
 
         elif len(foldersplit) > 1:
             nome = launching(foldersplit)
-            h.set_RGBcolor(red=colornames[nome][0],green=colornames[nome][1],blue=colornames[nome][2], priority=apriority)
-            line1 = foldersplit[0]
-            line2 = "launching " + nome + " on Hyperion " + ip
-            xbmcgui.Dialog().notification(line1, line2) 
-            h.close_connection()
-            
+            try:
+                h.set_RGBcolor(red=colornames[nome][0],green=colornames[nome][1],blue=colornames[nome][2], priority=apriority)
+                line = "launching " + nome + " on Hyperion " + ip
+                xbmcgui.Dialog().notification(foldersplit[0], line)
+                h.close_connection()
+            except socket.error:
+                xbmcgui.Dialog().notification('Error', 'cannot connect to server', xbmcgui.NOTIFICATION_ERROR)
 
     elif foldername == 'RGB Sliders':
-        xbmcgui.Dialog().ok(foldername, 'apre un control panel con 3 sliders')
-        # xbmc.executebuiltin("ActivateWindow(1100,'plugin://plugin.video.demo1/resources/sliders.xml',return)")
-        # text = xbmcgui.Window(10000).getProperty('GEN-DOWNLOADED')
-        # xbmcgui.Window(10000).setProperty('GEN-DOWNLOADED', text)
+        #xbmcgui.Dialog().ok(foldername, 'apre un control panel con 3 sliders')
+        window = MyAddon(foldername)
+        window.doModal()
+        # Destroy the instance explicitly because
+        # underlying xbmcgui classes are not garbage-collected on exit.
+        del window
+
     elif foldername == 'Settings':
         ADDON.openSettings()
         
-    xbmcplugin.endOfDirectory(addon_handle)
-
-
-
-    
-    
-    
-
+xbmcplugin.endOfDirectory(addon_handle)
