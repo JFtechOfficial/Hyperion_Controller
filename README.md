@@ -6,4 +6,4 @@
 - [ ] modify color from color folder using context menu and rgb sliders window
 - [ ] remove color from json file from color folder using context menu and yes/no dialog box
 - [ ] implement all the other transforms in a new folder
-- [ ] localization support
+- [x] localization support
