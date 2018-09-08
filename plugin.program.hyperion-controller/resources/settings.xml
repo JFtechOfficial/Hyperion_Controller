@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
-	<setting id="ip" type="ipaddress" label="Ip address" default="127.0.0.1" />
-	<setting id="port" type="number" label="Port" default="19444" />
-	<setting label="Priority (lower value means higher priority)" type="slider" id="priority" default="100" range="100,10,900" option="int" />
-	<setting id="debug" type="bool" label="Enable debugging mode" default="false" visible="true"/>
+	<setting id="ip" type="ipaddress" label="32000" default="127.0.0.1" />
+	<setting id="port" type="number" label="32001" default="19444" />
+	<setting label="32002" type="slider" id="priority" default="100" range="100,10,900" option="int" />
+	<setting id="debug" type="bool" label="32003" default="false" visible="true"/>
 </settings>

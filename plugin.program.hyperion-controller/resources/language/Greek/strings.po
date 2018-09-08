@@ -1,0 +1,113 @@
+# Kodi Media Center language file
+# Addon Name: hyperion-controller
+# Addon id: plugin.program.hyperion-controller
+# Addon Provider: JFtechOfficial
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-08-26 12:03+0100\n"
+"PO-Revision-Date: 2018-08-26 12:07+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: gr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 1.8.12\n"
+
+msgctxt "#30000"
+msgid "Clear all effects/colors"
+msgstr "Βγάλε τα εφέ/χρώματα"
+""
+
+msgctxt "#30001"
+msgid "Colors"
+msgstr "Χρώματα"
+""
+
+msgctxt "#30002"
+msgid "Effects"
+msgstr "Εφέ"
+""
+
+msgctxt "#30003"
+msgid "RGB sliders"
+msgstr "Sliders RGB"
+""
+
+msgctxt "#30004"
+msgid "Settings"
+msgstr "Ρυθμίσεις"
+""
+
+msgctxt "#30005"
+msgid "Support me here: https://ko-fi.com/Y8Y0FW3V "
+msgstr "Με στήρισε εδώ: https://ko-fi.com/Y8Y0FW3V "
+""
+
+msgctxt "#30006"
+msgid "clearing..."
+msgstr "Κλείνω..."
+""
+
+msgctxt "#30007"
+msgid "RED"
+msgstr "ΚΌΚΚΙΝΟ"
+""
+
+msgctxt "#30008"
+msgid "GREEN"
+msgstr "ΠΡΆΣΙΝΟ"
+""
+
+msgctxt "#30009"
+msgid "BLUE"
+msgstr "ΜΠΛΕ"
+""
+
+msgctxt "#30010"
+msgid "launching "
+msgstr "Ξεκινάω "
+""
+
+msgctxt "#30011"
+msgid " on Hyperion "
+msgstr " Σε Hyperion "
+""
+
+msgctxt "#30012"
+msgid "Error"
+msgstr "Σφάλμα"
+""
+
+msgctxt "#30013"
+msgid "cannot connect to the server"
+msgstr "Είναι αδύνατος να συνδέονται στο Σέρβερ"
+""
+
+msgctxt "#30014"
+msgid "Close"
+msgstr "Κλείσε"
+""
+msgctxt "#32000"
+msgid "IP address"
+msgstr "διεύθυνση IP"
+""
+
+msgctxt "#32001"
+msgid "Port"
+msgstr "θύρα"
+""
+
+msgctxt "#32002"
+msgid "Priority (lower value = higher priority)"
+msgstr "Προτεραιότητα (χαμηλότερη τιμή = υψηλότερη προτεραιότητα)"
+""
+
+msgctxt "#32003"
+msgid "Enable debugging mode"
+msgstr "Enable debugging mode"
+""
